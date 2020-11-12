@@ -1,9 +1,13 @@
 import axios from "axios";
 import {HOST} from "../../commons/hosts";
 
-const API_URL = HOST + "patients";
+const API_URL = HOST.backend_api + "/patients";
 
 class PatientService {
+
+    create(patient) {
+        return axios.post(API_URL + '/create', patient);
+    }
 
     getAll() {
         return axios.get(API_URL + '/getAll');
@@ -15,6 +19,10 @@ class PatientService {
 
     getByUsername(username) {
         return axios.get(API_URL + '/getByUsername/' + username);
+    }
+
+    getByCaregiver(id) {
+        return axios.get(API_URL + '/getByCaregiver/' + id);
     }
 
     updateById(id, patient) {
@@ -34,5 +42,4 @@ class PatientService {
     }
 
 }
-
 export default new PatientService();

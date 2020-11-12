@@ -6,16 +6,6 @@ import {Button, Card, FormControl, FormGroup, FormLabel} from "react-bootstrap";
 import CardBody from "reactstrap/es/CardBody";
 import CardHeader from "reactstrap/es/CardHeader";
 
-const required = value => {
-    if (!value) {
-        return (
-            <div className="alert alert-danger" role="alert">
-                This field is required!
-            </div>
-        );
-    }
-};
-
 class Login extends React.Component {
     constructor(props) {
         super(props);
@@ -49,23 +39,31 @@ class Login extends React.Component {
             message: ""
         });
 
-        let checkBtn = document.getElementById("logInButton");
-        console.log(checkBtn.textContent);
-
         AuthService.login(this.state.username, this.state.password)
             .then(() => {
-                    this.props.history.push('/profile');
-                    window.location.reload();
-                },
-                error => {
-                    const resMessage =
-                        (error.response &&
-                            error.response.data &&
-                            error.response.data.message) || error.message || error.toString();
-                    this.setState({
-                        message: resMessage
-                    });
-                })
+                    let currentUser = AuthService.getCurrentUser();
+                    console.log(currentUser);
+                    let role = currentUser.roles[0];
+                    if (role.localeCompare("ROLE_PATIENT") === 0) {
+                        this.props.history.push('/patient/home');
+                        window.location.reload();
+                    }
+                    if (role.localeCompare("ROLE_CAREGIVER") === 0) {
+                        this.props.history.push('/caregiver/home');
+                        window.location.reload();
+                    }
+                    if(role.localeCompare("ROLE_DOCTOR") === 0) {
+                        this.props.history.push('/doctor/home');
+                        window.location.reload();
+                    }
+                }
+            )
+            .catch(e => {
+                console.log(e);
+            });
+
+
+
     }
 
     render() {

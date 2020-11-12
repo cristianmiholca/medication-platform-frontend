@@ -1,6 +1,5 @@
 import React from "react";
 import AuthService from "../services/auth/auth-service";
-import {Container, Jumbotron} from "react-bootstrap";
 
 export default class Profile extends React.Component {
     constructor(props) {
