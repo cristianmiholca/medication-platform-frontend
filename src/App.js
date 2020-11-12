@@ -1,13 +1,12 @@
 import './App.css';
-import {BrowserRouter as Router, Route, Switch, Link} from 'react-router-dom';
+import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
 import Home from './components/home.component'
 import React from "react";
 import Login from "./components/login.component";
-import Profile from "./components/profile.component";
 import AuthService from "./services/auth/auth-service";
-import Register from "./components/register.component";
 import HomeDoctor from "./components/doctor/home-doctor.component";
-import PatientsContainer from "./components/patient/patients-container.component"
+import HomeCaregiver from "./components/caregiver/home-caregiver.component";
+import PatientHome from "./components/patient/patient-home.component";
 
 class App extends React.Component {
     constructor(props) {
@@ -15,17 +14,7 @@ class App extends React.Component {
         this.logOut = this.logOut.bind(this);
 
         this.state = {
-            currentUser: undefined
-        }
-    }
-
-    componentDidMount() {
-        const user = AuthService.getCurrentUser();
-
-        if (user) {
-            this.setState({
-                currentUser: user
-            })
+            currentUser: AuthService.getCurrentUser()
         }
     }
 
@@ -34,8 +23,6 @@ class App extends React.Component {
     }
 
     render() {
-        const {currentUser} = this.state;
-
         return (
             <div>
                 <Router>
@@ -52,29 +39,27 @@ class App extends React.Component {
                             path='/home'
                             render={() => <Home/>}
                         />
-
                         <Route
                             exact
                             path='/login'
                             render={() => <Login/>}
                         />
-                        <Route
-                            exact
-                            path='/profile'
-                            render={() => <Profile/>}
-                        />
-                        <Route
+
+                        < Route
                             exact
                             path='/doctor/home'
                             render={() => <HomeDoctor/>}
-                        />
-
+                            />
                         <Route
                             exact
-                            path='/doctor/patients'
-                            render={() => <PatientsContainer/>}
+                            path='/caregiver/home'
+                            render={() => <HomeCaregiver/>}
                         />
-
+                        <Route
+                            exact
+                            path='/patient/home'
+                            render={() => <PatientHome/>}
+                        />
                     </Switch>
                 </Router>
             </div>);

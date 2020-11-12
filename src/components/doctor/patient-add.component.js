@@ -1,33 +1,40 @@
 import React from "react";
-import Form from "react-validation/build/form";
-import AuthService from "../services/auth/auth-service";
-import {Button, Card, FormControl, FormGroup, FormLabel, Modal} from "react-bootstrap";
+import {Button, Card, Form, FormControl, FormGroup, FormLabel, Modal} from "react-bootstrap";
 import CardBody from "reactstrap/es/CardBody";
 import CardHeader from "reactstrap/es/CardHeader";
+import CaregiverService from "../../services/data/caregiver-service";
+import AuthService from "../../services/auth/auth-service";
 import DatePicker from "react-datepicker";
-import * as Alerts from "../utils/alerts";
+import "react-datepicker/dist/react-datepicker.css";
+import * as Alerts from "../../utils/alerts";
 
-class Register extends React.Component {
+class AddPatientForm extends React.Component {
+
     constructor(props) {
         super(props);
         this.onChangeUsername = this.onChangeUsername.bind(this);
         this.onChangePassword = this.onChangePassword.bind(this);
         this.onChangeName = this.onChangeName.bind(this);
-        this.onChangeGender = this.onChangeGender.bind(this);
         this.onChangeAddress = this.onChangeAddress.bind(this);
-        this.onChangeRole = this.onChangeRole.bind(this);
-        this.handleRegister = this.handleRegister.bind(this);
+        this.onChangeGender = this.onChangeGender.bind(this);
+        this.onChangeCaregiver = this.onChangeCaregiver.bind(this);
+        this.renderCaregiver = this.renderCaregiver.bind(this);
+        this.addPatient = this.addPatient.bind(this);
+        this.hideAlerts = this.hideAlerts.bind(this);
 
         this.state = {
             username: "",
             password: "",
+            birthDate: "",
             name: "",
             gender: "",
-            birthDate: "",
             address: "",
-            role: "",
-            successful: false
+            selectedCaregiver: undefined,
+            caregiverList: [],
+            showSuccessAlert: false,
+            showErrorAlert: false
         };
+
     }
 
     hideAlerts() {
@@ -35,6 +42,10 @@ class Register extends React.Component {
             showSuccessAlert: false,
             showErrorAlert: false
         })
+    }
+
+    componentDidMount() {
+        this.fetchCaregivers();
     }
 
     onChangeUsername(e) {
@@ -67,124 +78,106 @@ class Register extends React.Component {
         });
     }
 
-    onChangeRole(e) {
-        this.setState({
-            role: e.target.value
-        })
+    async onChangeCaregiver(e) {
+        e.preventDefault();
+        await this.setState({
+            selectedCaregiver: JSON.parse(e.target.value)
+        });
+        console.log(this.state.selectedCaregiver);
     }
 
     handleBirthDateChange = date => {
+        console.log('date: ', date)
         this.setState({
             birthDate: date
         });
     }
 
-    handleRegister(e) {
+    renderCaregiver(caregiver, index) {
+        return (
+            <option key={index} value={JSON.stringify(caregiver)}>
+                {caregiver.name}
+            </option>
+        );
+    }
+
+    fetchCaregivers() {
+        CaregiverService.getAll()
+            .then(response => {
+                console.log(response);
+                this.setState({
+                    caregiverList: response.data
+                });
+            })
+            .catch(e => {
+                console.log(e);
+            });
+    }
+
+    addPatient(e) {
         e.preventDefault();
 
-        let user = {
+        let patient = {
             username: this.state.username,
             password: this.state.password,
+            birthDate: this.state.birthDate,
             name: this.state.name,
             gender: this.state.gender,
-            birthDate: this.state.birthDate,
-            address: this.state.address
+            address: this.state.address,
+        }
+        if(this.state.selectedCaregiver !== undefined){
+            patient.caregiver_id = this.state.selectedCaregiver.id;
         }
 
-        if (this.state.role.localeCompare("Patient") === 0) {
-            AuthService.registerPatient(user)
-                .then(() => {
-                        this.setState({
-                            successful: true
-                        });
-                    },
-                )
-                .catch(e => {
-                    console.log(e);
+        console.log(patient);
+        AuthService.registerPatient(patient)
+            .then(() => {
                     this.setState({
-                        successful: false
+                        showSuccessAlert: true
                     });
                 })
-        } else {
-            if (this.state.role.localeCompare("Caregiver") === 0) {
-                AuthService.registerCaregiver(user)
-                    .then(() => {
-                            this.setState({
-                                successful: true
-                            });
-                        }
-                    )
-                    .catch(e => {
-                        console.log(e);
-                        this.setState({
-                            successful: false
-                        });
-                    })
-            } else {
-                AuthService.registerDoctor(user)
-                    .then(() => {
-                            this.setState({
-                                successful: true
-                            });
-                        }
-                    )
-                    .catch(e => {
-                        console.log(e);
-                        this.setState({
-                            successful: false
-                        });
-                    });
-            }
-        }
+            .catch(e => {
+                console.log(e);
+                this.setState({
+                    showErrorAlert: true
+                });
+            })
     }
 
     render() {
-
         return (
             <div>
                 <Card bg="dark" text="white">
-                    <CardHeader>Register</CardHeader>
+                    <CardHeader>
+                        Add patient
+                    </CardHeader>
                     <CardBody>
-                        <Form onSubmit={this.handleRegister}>
-                            <FormControl as="select"
-                                         size="sm"
-                                         value={this.state.role}
-                                         onChange={this.onChangeRole}>
-                                <option value="" selected disabled hidden>Choose role</option>
-                                <option>Patient</option>
-                                <option>Caregiver</option>
-                                <option>Doctor</option>
-                            </FormControl>
-
+                        <Form>
                             <FormGroup>
                                 <FormLabel>Username</FormLabel>
-                                <FormControl id="registerUsernameFormControl"
-                                             placeholder="Enter username here"
+                                <FormControl id="username"
+                                             placeholder="Username"
                                              onChange={this.onChangeUsername}
-                                             required>
-                                </FormControl>
+                                             required/>
                             </FormGroup>
 
                             <FormGroup>
                                 <FormLabel>Password</FormLabel>
-                                <FormControl id="registerPasswordFormControl"
-                                             type="password"
-                                             placeholder="Enter password here"
+                                <FormControl id="patientPasswordFormControl"
+                                             placeholder="Password"
                                              onChange={this.onChangePassword}
-                                             required>
-                                </FormControl>
+                                             required/>
                             </FormGroup>
 
                             <FormGroup>
                                 <FormLabel>Name</FormLabel>
-                                <FormControl id="registerNameFormControl"
-                                             placeholder="Enter name here"
+                                <FormControl id="name"
+                                             placeholder="Name"
+                                             value={this.state.name}
                                              onChange={this.onChangeName}
-                                             required>
-                                </FormControl>
+                                             required/>
                             </FormGroup>
 
-                            {(this.state.role.localeCompare('Doctor') !== 0) &&
                             <FormGroup>
                                 <FormLabel>Gender</FormLabel>
                                 <FormControl as="select"
@@ -196,7 +189,6 @@ class Register extends React.Component {
                                     <option>Female</option>
                                 </FormControl>
                             </FormGroup>
-                            }
 
                             <FormGroup>
                                 <FormLabel>Birth Date</FormLabel>
@@ -209,25 +201,40 @@ class Register extends React.Component {
                             <FormGroup>
                                 <FormLabel>Address</FormLabel>
                                 <FormControl id="addressFormControl"
+                                             placeholder="Address"
                                              value={this.state.address}
                                              onChange={this.onChangeAddress}
                                              required/>
                             </FormGroup>
 
-                            <Button id="registerButton"
-                                    type="submit">
-                                Register
+                            <FormGroup>
+                                <FormLabel>Caregiver</FormLabel>
+                                <FormControl as="select"
+                                             size="sm"
+                                             value={this.state.selectedCaregiver}
+                                             onChange={this.onChangeCaregiver}>
+                                    <option value="" selected disabled hidden>Choose caregiver</option>
+                                    {this.state.caregiverList.map(this.renderCaregiver)};
+                                </FormControl>
+                            </FormGroup>
+
+                            <Button id="addPatient"
+                                    type="submit"
+                                    onClick={this.addPatient}
+                            >
+                                Add Patient
                             </Button>
+
                         </Form>
                     </CardBody>
                 </Card>
 
-                <Modal show={this.state.successful}
+                <Modal show={this.state.showSuccessAlert}
                        onHide={this.hideAlerts}>
-                    <Alerts.SuccessAlert message="User registered successfully!"/>
+                    <Alerts.SuccessAlert message="Patient registered successfully!"/>
                 </Modal>
 
-                <Modal show={!this.state.successful}
+                <Modal show={this.state.showErrorAlert}
                        onHide={this.hideAlerts}>
                     <Alerts.ErrorAlert message="An error occurred during register!"/>
                 </Modal>
@@ -237,5 +244,4 @@ class Register extends React.Component {
     }
 }
 
-export default Register;
-
+export default AddPatientForm;
