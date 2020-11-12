@@ -27,5 +27,3 @@ deploy:
   environment:
     name: staging
     url: https://react-medication-platform.herokuapp.com/
-  only:
-    - production
